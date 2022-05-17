@@ -11,8 +11,8 @@ public class LeftRightCenter {
      * These constants are used to set simulation parameters.
      * Would be better to convert them to command line arguments.
      */
-    public static final int NUM_GAMES = 100;
-    public static final int NUM_PLAYERS = 4;
+    public static final int NUM_GAMES = 1000;
+    public static final int NUM_PLAYERS = 5;
     public static final int[] STRATEGIES = {3, 3, 3, 3, 3, 3};
     public static final int NUM_STARTING_CHIPS = 3;
 
@@ -310,7 +310,7 @@ public class LeftRightCenter {
          * Allows the strategy to change without making a new player.
          * 
          * @param strategy - the strategy for this player.
-         *      See javadoc comment at the top for each strategy.
+         *      See javadoc comment at the strategy field for each strategy.
          */
         public void setStrategy(int strategy) {
             this.strategy = strategy;
@@ -353,7 +353,7 @@ public class LeftRightCenter {
          *      in relation to this player.
          */
         private int getLeftOfCenter() {
-            return (players.length + (int) Math.floor(players.length / 2))
+            return (playerNum + (int) Math.floor(players.length / 2))
                 % players.length;
         }
 
@@ -364,7 +364,7 @@ public class LeftRightCenter {
          *      in relation to this player.
          */
         private int getRightOfCenter() {
-            return (players.length + (int) Math.ceil(players.length / 2))
+            return (playerNum + (int) Math.ceil(players.length / 2))
                 % players.length;
         }
 
