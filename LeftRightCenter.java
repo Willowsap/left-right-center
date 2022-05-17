@@ -11,9 +11,8 @@ public class LeftRightCenter {
      * These constants are used to set simulation parameters.
      * Would be better to convert them to command line arguments.
      */
-    public static final int NUM_GAMES = 1000;
+    public static final int NUM_GAMES = 1000000;
     public static final int NUM_PLAYERS = 5;
-    public static final int[] STRATEGIES = {3, 3, 3, 3, 3, 3};
     public static final int NUM_STARTING_CHIPS = 3;
 
     /**
@@ -49,20 +48,21 @@ public class LeftRightCenter {
     private int[] winners;
 
     /**
-     * The strategy for each player.
-     * Must be the same length as players.
-     */
-    private int[] strategies;
-
-    /**
      * Runs a set number of simulations for a set nunber of players.
      * 
      * @param args - unused currently
      */
     public static void main(String[] args) {
-        LeftRightCenter game = new LeftRightCenter(NUM_PLAYERS, STRATEGIES);
-        for (int i = 0; i < NUM_GAMES; i++) game.playGame();
+        LeftRightCenter game = new LeftRightCenter(NUM_PLAYERS);
+        int maxTurns = 0, minTurns = 0;
+        for (int i = 0; i < NUM_GAMES; i++) {
+            game.playGame();
+            if (maxTurns == 0 || maxTurns < game.getNumTurns()) maxTurns = game.getNumTurns();
+            if (minTurns == 0 || minTurns > game.getNumTurns()) minTurns = game.getNumTurns();
+        }
         System.out.println("Average #turns: " + game.getRunningAverageTurns());
+        System.out.println("Max Turns: " + maxTurns);
+        System.out.println("Min Turns: " + minTurns);
         System.out.println("Winners");
         for (int i = 0; i < NUM_PLAYERS; i++)
             System.out.printf("Player %d won %d times\n",
@@ -75,13 +75,12 @@ public class LeftRightCenter {
      * @param numPlayers - the number of players in the game.
      * @param strategies - the strategies for each player.
      */
-    public LeftRightCenter(int numPlayers, int[] strategies) {
+    public LeftRightCenter(int numPlayers) {
         this.numTurns = -1;
         this.gamesPlayed = 0;
         this.runningAverage = 0;
         this.runningTotal = 0;
         this.winners = new int[numPlayers];
-        this.strategies = Arrays.copyOf(strategies, strategies.length);
         setNumPlayers(numPlayers);
     }
 
@@ -92,7 +91,7 @@ public class LeftRightCenter {
         numTurns = 0;
         resetPlayers();
         while (getWinner() == -1)
-            players[++numTurns % players.length].takeTurn(players);
+            players[++numTurns % NUM_PLAYERS].takeTurn(players);
         winners[getWinner()]++;
         runningTotal += numTurns;
         gamesPlayed++;
@@ -118,10 +117,13 @@ public class LeftRightCenter {
      *      or -1 if there is no winner.
      */
     public int getWinner() {
-        for (int i = 0; i < players.length; i++)
-            if (players[i].getChips() == players.length * NUM_STARTING_CHIPS)
-                return i;
-        return -1;
+        int numZeros = 0, hasChips = -1;
+        for (int i = 0; i < NUM_PLAYERS; i++) {
+            if (players[i].getChips() == 0) numZeros++;
+            else hasChips = i;
+        }
+        if (numZeros == NUM_PLAYERS - 1) return hasChips;
+        else return -1;
     }
 
     /**
@@ -168,34 +170,14 @@ public class LeftRightCenter {
     }
 
     /**
-     * Getter for the strategies array.
-     * 
-     * @return a copy of the player strategies currently used.
-     */
-    public int[] getStrategies() {
-        return Arrays.copyOf(strategies, strategies.length);
-    }
-
-    /**
      * Resets the number of players and makes new players.
      * 
      * @param numPlayers - the new number of players.
      */
     public void setNumPlayers(int numPlayers) {
-        this.players = new Player[numPlayers];
-        for (int i = 0; i < numPlayers; i++)
-            players[i] = new Player(i, strategies[i]);
-    }
-
-    /**
-     * Sets the strategy of each player.
-     * 
-     * @param strategies - the strategy for each player.
-     *      must be equal length or longer than the player array.
-     */
-    public void setStrategies(int[] strategies) {
+        this.players = new Player[numPlayers + 1];
         for (int i = 0; i < players.length; i++)
-            players[i].setStrategy(strategies[i]);
+            players[i] = new Player(i);
     }
 
     /**
@@ -213,25 +195,15 @@ public class LeftRightCenter {
         private int playerNum;
 
         /**
-         * 0 = random
-         * 1 = left of center
-         * 2 = right of center
-         * 3 = player with most
-         * 4 = player with least
-         */
-        private int strategy;
-
-        /**
          * Player constructor.
          * 
          * @param playerNum - the player's unique id (index in players array).
          * @param strategy - the player's strategy for getting center
          *      when there is an odd number of players.
          */
-        public Player(int playerNum, int strategy) {
+        public Player(int playerNum) {
             this.playerNum = playerNum;
             this.chips = NUM_STARTING_CHIPS;
-            this.strategy = strategy;
         }
 
         /**
@@ -251,24 +223,14 @@ public class LeftRightCenter {
             for (int i = 0; i < rolls; i++) {
                 char die = roll();
                 receivingPlayer =
-                      die == 'r' ? (playerNum + 1) % players.length
+                      die == 'r' ? (playerNum + 1) % NUM_PLAYERS
                     : die == 'l' ? playerNum - 1 < 0
-                        ? players.length - 1 : playerNum - 1
-                    : die == 'c' ? getPlayerAcross() : -1;
+                        ? NUM_PLAYERS - 1 : playerNum - 1
+                    : die == 'c' ? NUM_PLAYERS : -1;
                 if (receivingPlayer != -1) {
                     players[receivingPlayer].addChips(1);
                     chips--;
-                    // these two print statements can be used to verify th
-                    // players are following the rules.
-                    // uncomment if you want to check.
-                    //System.out.printf(
-                    //    "Player %d rolled %c, gives Player %d a chip",
-                    //    playerNum, die, receivingPlayer);
-                } else {
-                    //System.out.printf("Player %d rolled %c, gives nothing",
-                    //    playerNum, die);
                 }
-                
             }
         }
 
@@ -306,17 +268,6 @@ public class LeftRightCenter {
         }
 
         /**
-         * Setter method for this player's strategy.
-         * Allows the strategy to change without making a new player.
-         * 
-         * @param strategy - the strategy for this player.
-         *      See javadoc comment at the strategy field for each strategy.
-         */
-        public void setStrategy(int strategy) {
-            this.strategy = strategy;
-        }
-
-        /**
          * Setter method for the players number of chips.
          * Primarily used to reset the nuimber back to starting amount.
          * 
@@ -324,83 +275,6 @@ public class LeftRightCenter {
          */
         public void setChips(int chips) {
             this.chips = chips;
-        }
-
-        /**
-         * Gets the index of the player across from this player.
-         * When there is an odd number of players,
-         * this player's strategy is used.
-         * 
-         * @return the index of the player across.
-         */
-        private int getPlayerAcross() {
-            // don't use strategy algorithm with an even number of players.
-            if (players.length % 2 == 0)
-                return (playerNum + players.length / 2) % players.length;
-            // use strategy for an odd number of players
-            return strategy == 0 ? getLeftOrRightRandomly()
-                 : strategy == 1 ? getLeftOfCenter()
-                 : strategy == 2 ? getRightOfCenter()
-                 : strategy == 3 ? getPlayerWithMore()
-                 : strategy == 4 ? getPlayerWithLess()
-                 : -1;
-        }
-
-        /**
-         * Gets the player to the left of center.
-         * 
-         * @return the index of the player left of center
-         *      in relation to this player.
-         */
-        private int getLeftOfCenter() {
-            return (playerNum + (int) Math.floor(players.length / 2))
-                % players.length;
-        }
-
-        /**
-         * Gets the player to the right of center.
-         * 
-         * @return the index of the player right of center
-         *      in relation to this player.
-         */
-        private int getRightOfCenter() {
-            return (playerNum + (int) Math.ceil(players.length / 2))
-                % players.length;
-        }
-
-        /**
-         * Gets the player to left or right of center randomly.
-         * 
-         * @return the player to left or right of center
-         *      in relation to this player.
-         */
-        private int getLeftOrRightRandomly() {
-            return Math.random() >= 0.5 ? getLeftOfCenter()
-                : getRightOfCenter();
-        }
-
-        /**
-         * Gets the player across from this player who has more chips.
-         * 
-         * @return the player to left or right of center
-         *      who has more chips than the other.
-         */
-        private int getPlayerWithMore() {
-            int r = getRightOfCenter();
-            int l = getLeftOfCenter();
-            return (players[l].getChips() > players[r].getChips()) ? l : r;
-        }
-
-        /**
-         * Gets the player across from this player who has fewer chips.
-         * 
-         * @return the player to left or right of center
-         *      who has fewer chips than the other.
-         */
-        private int getPlayerWithLess() {
-            int r = getRightOfCenter();
-            int l = getLeftOfCenter();
-            return (players[l].getChips() < players[r].getChips()) ? l : r;
         }
     }
 }
