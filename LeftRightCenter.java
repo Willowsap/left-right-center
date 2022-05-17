@@ -23,6 +23,7 @@ public class LeftRightCenter {
 
     /**
      * Current number of turns taken.
+     * Could overflow if many games are played.
      */
     private int numTurns;
 
@@ -64,7 +65,8 @@ public class LeftRightCenter {
         System.out.println("Average #turns: " + game.getRunningAverageTurns());
         System.out.println("Winners");
         for (int i = 0; i < NUM_PLAYERS; i++)
-            System.out.printf("Player %d won %d times\n", i, game.getWinners()[i]);
+            System.out.printf("Player %d won %d times\n",
+                i, game.getWinners()[i]);
     }
 
     /**
@@ -104,18 +106,21 @@ public class LeftRightCenter {
         if (runningAverage == 0)
             runningAverage = numTurns;
         else
-            runningAverage = (double)runningAverage * ((double)(gamesPlayed - 1) / gamesPlayed)
+            runningAverage = (double)runningAverage
+                * ((double)(gamesPlayed - 1) / gamesPlayed)
                 + (double)numTurns / gamesPlayed;
     }
 
     /**
      * Finds the winner in the players array.
      * 
-     * @return the index of the winner in the players array or -1 if there is no winner.
+     * @return the index of the winner in the players array
+     *      or -1 if there is no winner.
      */
     public int getWinner() {
         for (int i = 0; i < players.length; i++)
-            if (players[i].getChips() == players.length * NUM_STARTING_CHIPS) return i;
+            if (players[i].getChips() == players.length * NUM_STARTING_CHIPS)
+                return i;
         return -1;
     }
 
@@ -219,9 +224,9 @@ public class LeftRightCenter {
         /**
          * Player constructor.
          * 
-         * @param playerNum - the player's unique id (index in game's players array).
-         * @param strategy - the player's strategy for getting center when there is
-         *      an odd number of players.
+         * @param playerNum - the player's unique id (index in players array).
+         * @param strategy - the player's strategy for getting center
+         *      when there is an odd number of players.
          */
         public Player(int playerNum, int strategy) {
             this.playerNum = playerNum;
@@ -231,7 +236,10 @@ public class LeftRightCenter {
 
         /**
          * The player takes one turn.
-         * They roll the dice up to 3 times depending on how many chips they have.
+         * They roll the dice up to 3 times depending on players chips.
+         * 1 chips = 1 roll
+         * 2 chips = 2 rolls
+         * 3+ chips = 3 rolls
          * Then they give chips to the appropriate players.
          * 
          * @param players - the array of players in the game. 
@@ -244,16 +252,21 @@ public class LeftRightCenter {
                 char die = roll();
                 receivingPlayer =
                       die == 'r' ? (playerNum + 1) % players.length
-                    : die == 'l' ? playerNum - 1 < 0 ? players.length - 1 : playerNum - 1
+                    : die == 'l' ? playerNum - 1 < 0
+                        ? players.length - 1 : playerNum - 1
                     : die == 'c' ? getPlayerAcross() : -1;
                 if (receivingPlayer != -1) {
                     players[receivingPlayer].addChips(1);
                     chips--;
-                    // these two print statements can be used to verify the players are following the rules.
+                    // these two print statements can be used to verify th
+                    // players are following the rules.
                     // uncomment if you want to check.
-                    //System.out.printf("Player %d rolled %c, gives Player %d a chip", playerNum, die, receivingPlayer);
+                    //System.out.printf(
+                    //    "Player %d rolled %c, gives Player %d a chip",
+                    //    playerNum, die, receivingPlayer);
                 } else {
-                    //System.out.printf("Player %d rolled %c, gives nothing", playerNum, die);
+                    //System.out.printf("Player %d rolled %c, gives nothing",
+                    //    playerNum, die);
                 }
                 
             }
@@ -261,7 +274,8 @@ public class LeftRightCenter {
 
         /**
          * Adds a certain number of chips to the player's pile.
-         * Not required due to setChips method, but makes adding chips slightly simpler.
+         * Not required due to setChips method, 
+         * but makes adding chips slightly simpler.
          * 
          * @param chipsToAdd - number of chips to add.
          */
@@ -314,13 +328,15 @@ public class LeftRightCenter {
 
         /**
          * Gets the index of the player across from this player.
-         * When there is an odd number of players, this player's strategy is used.
+         * When there is an odd number of players,
+         * this player's strategy is used.
          * 
          * @return the index of the player across.
          */
         private int getPlayerAcross() {
             // don't use strategy algorithm with an even number of players.
-            if (players.length % 2 == 0) return (playerNum + players.length / 2) % players.length;
+            if (players.length % 2 == 0)
+                return (playerNum + players.length / 2) % players.length;
             // use strategy for an odd number of players
             return strategy == 0 ? getLeftOrRightRandomly()
                  : strategy == 1 ? getLeftOfCenter()
@@ -333,51 +349,58 @@ public class LeftRightCenter {
         /**
          * Gets the player to the left of center.
          * 
-         * @return the index of the player left of center in relation to this player.
+         * @return the index of the player left of center
+         *      in relation to this player.
          */
         private int getLeftOfCenter() {
-            return (players.length + (int) Math.floor(players.length / 2)) % players.length;
+            return (players.length + (int) Math.floor(players.length / 2))
+                % players.length;
         }
 
         /**
          * Gets the player to the right of center.
          * 
-         * @return the index of the player right of center in relation to this player.
+         * @return the index of the player right of center
+         *      in relation to this player.
          */
         private int getRightOfCenter() {
-            return (players.length + (int) Math.ceil(players.length / 2)) % players.length;
+            return (players.length + (int) Math.ceil(players.length / 2))
+                % players.length;
         }
 
         /**
          * Gets the player to left or right of center randomly.
          * 
-         * @return the player to left or right of center in relation to this player.
+         * @return the player to left or right of center
+         *      in relation to this player.
          */
         private int getLeftOrRightRandomly() {
-            return Math.random() >= 0.5 ? getLeftOfCenter() : getRightOfCenter();
+            return Math.random() >= 0.5 ? getLeftOfCenter()
+                : getRightOfCenter();
         }
 
         /**
          * Gets the player across from this player who has more chips.
          * 
-         * @return the player to left or right of center who has more chips than the other.
+         * @return the player to left or right of center
+         *      who has more chips than the other.
          */
         private int getPlayerWithMore() {
-            int playerToRight = getRightOfCenter();
-            int playerToLeft = getLeftOfCenter();
-            return (players[playerToLeft].getChips() > players[playerToRight].getChips()) ? playerToLeft : playerToRight;
+            int r = getRightOfCenter();
+            int l = getLeftOfCenter();
+            return (players[l].getChips() > players[r].getChips()) ? l : r;
         }
 
         /**
          * Gets the player across from this player who has fewer chips.
          * 
-         * @return the player to left or right of center who has fewer chips than the other.
+         * @return the player to left or right of center
+         *      who has fewer chips than the other.
          */
         private int getPlayerWithLess() {
-            int playerToRight = getRightOfCenter();
-            int playerToLeft = getLeftOfCenter();
-            return (players[playerToLeft].getChips() < players[playerToRight].getChips())
-                ? playerToLeft : playerToRight;
+            int r = getRightOfCenter();
+            int l = getLeftOfCenter();
+            return (players[l].getChips() < players[r].getChips()) ? l : r;
         }
     }
 }
